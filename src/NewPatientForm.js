@@ -82,8 +82,6 @@ function NewPatientForm() {
     created_date: "",
     modified_date: "",
   }
-  //});
-
 
   const [formData, setFormData] = useState(initialFormData);
 
@@ -91,12 +89,21 @@ function NewPatientForm() {
     setFormData(initialFormData);
   };
 
-
   const handleBack = () => {
     navigate(-1); 
   };
 
-
+  const formatDate = (date) => {
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+  
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+  
+    return [year, month, day].join('-');
+  };
 
 // Handles input temperature change
 const handleTempChange = (e) => {
@@ -108,33 +115,6 @@ const handleTempChange = (e) => {
     }));
   }
 };
-
-// Handles switching between Celsius and Fahrenheit
-const handleUnitChange = (e) => {
-  const { value } = e.target; 
-  setFormData((prevState) => ({
-    ...prevState,
-    tempUnit: value, // Update unit
-  }));
-};
-
-// Converts temperature based on the selected unit
-const convertTemp = (value, toUnit) => {
-  if (!value || isNaN(value)) return '';
-
-  const temp = parseFloat(value);
-
-  if (toUnit === "F") {
-  
-    return (temp * 9 / 5 + 32).toFixed(1); 
-  } else if (toUnit === "C") {
-    return ((temp - 32) * 5 / 9).toFixed(1); 
-  }
-  return value;
-};
-
-
-
 
   useEffect(() => {
     if (location.state?.patient) {
@@ -215,6 +195,19 @@ const convertTemp = (value, toUnit) => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+
+      // Check if mepz_Code is provided
+  if (!formData.mepz_Code || formData.mepz_Code.trim() === "") {
+    alert("Please provide a valid Mepz Code.");
+    return; // Do not submit the form
+  }
+
+    if (!formData.height || !formData.weight || formData.height <= 0 || formData.weight <= 0) {
+      alert("Please enter valid height and weight to calculate BMI.");
+      return; // Do not submit the form
+    }
+  
+    console.log("Submitting form data:", formData);
     console.log("Submitting form data:", formData);
 
     try {
@@ -237,9 +230,7 @@ const convertTemp = (value, toUnit) => {
   return (
     <Container>
       <h2>Patient Form</h2>
-
       <Form onSubmit={handleFormSubmit}>
-
       <Form.Group as={Row} controlId="formmepzCode">
           <Form.Label column sm={2}>
             Mepz Code
@@ -335,7 +326,9 @@ const convertTemp = (value, toUnit) => {
             <Form.Control
               type="date"
               name="dob"
-              value={formData.dob}
+              value={formData.dob ? formatDate(formData.dob) : ''}
+              min="1900-01-01"
+              max={new Date().toISOString().split("T")[0]}  
               onChange={handleInputChange}
             />
           </Col>
@@ -810,17 +803,12 @@ const convertTemp = (value, toUnit) => {
           </Col>
         </Row>
 
-
-
-
-
         <Row>
   <Col>
     <Form.Group>
-      <Form.Label>Temp:</Form.Label>
+      <Form.Label><h7>{'Temp C\u00b0'}</h7></Form.Label>
       <Form.Control
         type="text"
-    
         name="temp"
         value={formData.temp}
         maxLength={5} 
@@ -834,8 +822,7 @@ const convertTemp = (value, toUnit) => {
             <Form.Group>
               <Form.Label>ECG:</Form.Label>
               <Form.Control
-                type="text"
-                
+                type="text"         
                 name="ecg"
                 value={formData.ecg}
                 onChange={handleInputChange}
