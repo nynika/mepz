@@ -96,6 +96,18 @@ function PatientForm() {
   };
  
 
+  const formatDate = (date) => {
+    const d = new Date(date);
+    let month = '' + (d.getMonth() + 1);
+    let day = '' + d.getDate();
+    const year = d.getFullYear();
+  
+    if (month.length < 2) month = '0' + month;
+    if (day.length < 2) day = '0' + day;
+  
+    return [year, month, day].join('-');
+  };
+
 // Handles input temperature change
 const handleTempChange = (e) => {
   const { name, value } = e.target;
@@ -106,32 +118,6 @@ const handleTempChange = (e) => {
     }));
   }
 };
-
-// Handles switching between Celsius and Fahrenheit
-const handleUnitChange = (e) => {
-  const { value } = e.target; 
-  setFormData((prevState) => ({
-    ...prevState,
-    tempUnit: value, // Update unit
-  }));
-};
-
-// Converts temperature based on the selected unit
-const convertTemp = (value, toUnit) => {
-  if (!value || isNaN(value)) return '';
-
-  const temp = parseFloat(value);
-
-  if (toUnit === "F") {
-  
-    return (temp * 9 / 5 + 32).toFixed(1); 
-  } else if (toUnit === "C") {
-    return ((temp - 32) * 5 / 9).toFixed(1); 
-  }
-  return value;
-};
-
-
 
   useEffect(() => {
     if (location.state?.patient) {
@@ -214,6 +200,12 @@ const convertTemp = (value, toUnit) => {
 
   const handleFormSubmit = async (event) => {
     event.preventDefault();
+
+    if (!formData.height || !formData.weight || formData.height <= 0 || formData.weight <= 0) {
+      alert("Please enter valid height and weight to calculate BMI.");
+      return; // Do not submit the form
+    }
+  
     console.log("Submitting form data:", formData);
 
     try {
@@ -317,7 +309,9 @@ const convertTemp = (value, toUnit) => {
             <Form.Control
               type="date"
               name="dob"
-              value={formData.dob}
+              value={formData.dob ? formatDate(formData.dob) : ''}
+              min="1900-01-01"
+              max={new Date().toISOString().split("T")[0]}  
               onChange={handleInputChange}
             />
           </Col>
@@ -718,8 +712,7 @@ const convertTemp = (value, toUnit) => {
               <Form.Label>Weight:</Form.Label>
               <Form.Control
                 type="text"
-                name="weight"
-           
+                name="weight"          
                 value={formData.weight}
                 onChange={handleInputChange}
                  maxLength={3}          
@@ -796,7 +789,7 @@ const convertTemp = (value, toUnit) => {
         <Row>
   <Col>
     <Form.Group>
-      <Form.Label>Temp  C:</Form.Label>
+      <Form.Label><h7>{'Temp C\u00b0'}</h7></Form.Label>
       <Form.Control
         type="text"
         name="temp"
